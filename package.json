@@ -1,0 +1,27 @@
+{
+  "name": "aws-practice",
+  "version": "1.0.0",
+  "description": "make a express server and deploy it on AWS for practice",
+  "keywords": [
+    "AWS",
+    "Ts"
+  ],
+  "license": "ISC",
+  "author": "anand",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.0.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

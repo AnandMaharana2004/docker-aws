@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Combined Marksheet Downloader</title>
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background-color: #f9f9f9;
+    }
+    input, button {
+      padding: 10px;
+      margin: 0.5rem 0;
+      width: 100%;
+      max-width: 600px;
+    }
+    #status {
+      margin-top: 1rem;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h2>Berhampur University – Marksheet Combiner</h2>
+  <input type="text" id="urlInput" placeholder="Paste any semester marksheet URL here">
+  <button onclick="combineMarkSheets()">Download All Semesters (1st to 6th)</button>
+  <p id="status"></p>
+
+  <script>
+    async function combineMarkSheets() {
+      const inputUrl = document.getElementById("urlInput").value.trim();
+      const status = document.getElementById("status");
+      status.innerText = "Processing...";
+
+      if (!inputUrl) return alert("Please paste a valid URL");
+
+      try {
+        const urlObj = new URL(inputUrl);
+        const params = urlObj.searchParams;
+        const regn_no = params.get("regn_no");
+        const batch = params.get("batch");
+        const cmbType = params.get("cmbType") || "Regular";
+
+        const semesterMap = {
+          "1TH": "MVRI",
+          "2TH": "MlRI",
+          "3TH": "M1RI",
+          "4TH": "NFRI",
+          "5TH": "NVRI",
+          "6TH": "NlRI"
+        };
+
+        const pdfDocs = [];
+
+        for (let semCode in semesterMap) {
+          const sem = semesterMap[semCode];
+          const marksheetUrl = `https://berhampuruniversity.silicontechlab.com/buerp/build/examination/mark_sheet_pdf.php?regn_no=${regn_no}&sem=${sem}&batch=${batch}&cmbType=${cmbType}`;
+          const res = await fetch(marksheetUrl);
+          const blob = await res.blob();
+          const arrayBuffer = await blob.arrayBuffer();
+          pdfDocs.push(arrayBuffer);
+          status.innerText = `Fetched ${semCode} semester...`;
+        }
+
+        const mergedPdf = await PDFLib.PDFDocument.create();
+
+        for (let pdfBytes of pdfDocs) {
+          const pdf = await PDFLib.PDFDocument.load(pdfBytes);
+          const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+          copiedPages.forEach(page => mergedPdf.addPage(page));
+        }
+
+        const finalPdf = await mergedPdf.save();
+        const blob = new Blob([finalPdf], { type: "application/pdf" });
+        const downloadUrl = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = downloadUrl;
+        a.download = "Combined_Marksheet.pdf";
+        a.click();
+
+        status.innerText = "✅ Download ready!";
+      } catch (error) {
+        console.error(error);
+        status.innerText = "❌ Failed to process. Please check the URL.";
+      }
+    }
+  </script>
+</body>
+</html>
